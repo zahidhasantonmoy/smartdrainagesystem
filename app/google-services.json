@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "445726018007",
+    "firebase_url": "https://smartdrainagesystem-75097-default-rtdb.firebaseio.com",
+    "project_id": "smartdrainagesystem-75097",
+    "storage_bucket": "smartdrainagesystem-75097.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:445726018007:android:fa852438e01b40b4476392",
+        "android_client_info": {
+          "package_name": "com.example.smartdrainagesystem"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBj77TYmL9LDf4Il_u9leFpY2zl3jdTWRE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
