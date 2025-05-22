@@ -15,7 +15,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    private TextView chamber1, chamber2, chamber3, gasMq2, gasMq8, temp, ir, flame, gps, alerts;
+    private TextView chamber1, chamber2, chamber3, sonar1, sonar2, gasMq2, gasMq8, temp, ir, flame, gps, alerts;
     private Button mapButton, manualCut;
     private Switch autoServo;
     private FirebaseFirestore db;
@@ -36,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
             chamber1 = findViewById(R.id.chamber1);
             chamber2 = findViewById(R.id.chamber2);
             chamber3 = findViewById(R.id.chamber3);
+            sonar1 = findViewById(R.id.sonar1);
+            sonar2 = findViewById(R.id.sonar2);
             gasMq2 = findViewById(R.id.gas_mq2);
             gasMq8 = findViewById(R.id.gas_mq8);
             temp = findViewById(R.id.temp);
@@ -56,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
             db = FirebaseFirestore.getInstance();
         } catch (Exception e) {
             Log.e(TAG, "Error initializing Firebase: " + e.getMessage());
-            alerts.setText("Firebase init failed");
+            if (alerts != null) alerts.setText("Firebase init failed");
             return;
         }
 
@@ -148,6 +150,12 @@ public class MainActivity extends AppCompatActivity {
                 if (chamber3 != null) chamber3.setBackgroundColor(getResources().getColor(R.color.blue));
                 if (alerts != null) alerts.setText("No alerts");
             }
+
+            // Sonar distances
+            Double dist1 = snapshot.getDouble("data.sonar_dist1");
+            Double dist2 = snapshot.getDouble("data.sonar_dist2");
+            if (sonar1 != null) sonar1.setText("Sonar 1: " + (dist1 != null ? dist1 : 0.0) + " cm");
+            if (sonar2 != null) sonar2.setText("Sonar 2: " + (dist2 != null ? dist2 : 0.0) + " cm");
 
             // Sensor data
             Double mq2 = snapshot.getDouble("data.mq2");
