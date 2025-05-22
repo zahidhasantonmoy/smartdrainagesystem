@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="FlowGuard EcoControl"
+        android:text="@string/app_name"
         android:textColor="@color/white"
         android:textSize="24sp"
         android:textStyle="bold"
@@ -20,7 +20,7 @@
     <!-- Water Levels -->
     <TextView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"u
+        android:layout_height="wrap_content"
         android:text="Water Levels"
         android:textColor="@color/white"
         android:textSize="18sp"/>
@@ -36,7 +36,7 @@
             android:layout_height="50dp"
             android:background="@color/blue"
             android:gravity="center"
-            android:text="Chamber 1: OK"
+            android:text="Chamber 1: Empty"
             android:textColor="@color/white"/>
         <TextView
             android:id="@+id/chamber2"
@@ -45,7 +45,7 @@
             android:layout_height="50dp"
             android:background="@color/blue"
             android:gravity="center"
-            android:text="Chamber 2: OK"
+            android:text="Chamber 2: Empty"
             android:textColor="@color/white"/>
         <TextView
             android:id="@+id/chamber3"
@@ -54,7 +54,7 @@
             android:layout_height="50dp"
             android:background="@color/blue"
             android:gravity="center"
-            android:text="Chamber 3: OK"
+            android:text="Chamber 3: Empty"
             android:textColor="@color/white"/>
     </LinearLayout>
 
@@ -78,16 +78,10 @@
         android:text="Sonar 2: 0.0 cm"
         android:textColor="@color/white"/>
     <TextView
-        android:id="@+id/gas_mq2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="MQ2 Gas: 0.0 V"
-        android:textColor="@color/white"/>
-    <TextView
         android:id="@+id/gas_mq8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="MQ8 Gas: 0.0 V"
+        android:text="MQ8 Gas: 0.00 V"
         android:textColor="@color/white"/>
     <TextView
         android:id="@+id/temp"
@@ -139,18 +133,17 @@
         android:textSize="18sp"
         android:layout_marginTop="16dp"/>
     <Switch
-        android:id="@+id/auto_servo"
+        android:id="@+id/servo_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Auto Cutting"
+        android:text="Servo On/Off"
         android:textColor="@color/white"/>
-    <Button
-        android:id="@+id/manual_cut"
+    <Switch
+        android:id="@+id/auto_switch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@color/yellow"
-        android:text="Manual Cut"
-        android:textColor="@color/black"/>
+        android:text="Auto Mode"
+        android:textColor="@color/white"/>
 
     <!-- Alerts -->
     <TextView
