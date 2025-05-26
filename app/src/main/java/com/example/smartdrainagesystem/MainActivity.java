@@ -8,9 +8,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -19,13 +21,22 @@ import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    private static final long AUTO_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in milliseconds
-    private TextView chamber1, chamber2, chamber3, sonar1, sonar2, gasMq8, temp, ir, flame, gps, alerts;
+    private static final long AUTO_REFRESH_INTERVAL = 2000; // 2 seconds
+    private static final long SERVO_ON_DURATION = 10 * 1000; // 10 seconds
+    private static final long SERVO_OFF_DURATION = 10 * 60 * 1000; // 10 minutes
+    private static final double DEFAULT_LAT = 23.811855;
+    private static final double DEFAULT_LON = 90.357140;
+
+    private CardView chamber1Card, chamber2Card, chamber3Card;
+    private ProgressBar chamber1Progress, chamber2Progress, chamber3Progress;
+    private TextView chamber1Status, chamber2Status, chamber3Status;
+    private TextView sonar1, sonar2, gasMq8, temp, ir, flame, gps, proximityAlert, alerts;
     private Button mapButton, refreshButton;
     private Switch servoSwitch, autoSwitch;
     private DatabaseReference sensorRef, servoRef;
-    private Handler refreshHandler;
-    private Runnable refreshRunnable;
+    private Handler refreshHandler, servoHandler;
+    private Runnable refreshRunnable, servoOffRunnable;
+    private boolean isServoAutoRunning = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,9 +45,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize UI elements
         try {
-            chamber1 = findViewById(R.id.chamber1);
-            chamber2 = findViewById(R.id.chamber2);
-            chamber3 = findViewById(R.id.chamber3);
+            chamber1Card = findViewById(R.id.chamber1_card);
+            chamber2Card = findViewById(R.id.chamber2_card);
+            chamber3Card = findViewById(R.id.chamber3_card);
+            chamber1Progress = findViewById(R.id.chamber1_progress);
+            chamber2Progress = findViewById(R.id.chamber2_progress);
+            chamber3Progress = findViewById(R.id.chamber3_progress);
+            chamber1Status = findViewById(R.id.chamber1_status);
+            chamber2Status = findViewById(R.id.chamber2_status);
+            chamber3Status = findViewById(R.id.chamber3_status);
             sonar1 = findViewById(R.id.sonar1);
             sonar2 = findViewById(R.id.sonar2);
             gasMq8 = findViewById(R.id.gas_mq8);
@@ -44,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
             ir = findViewById(R.id.ir);
             flame = findViewById(R.id.flame);
             gps = findViewById(R.id.gps);
+            proximityAlert = findViewById(R.id.proximity_alert);
             mapButton = findViewById(R.id.map_button);
             refreshButton = findViewById(R.id.refresh_button);
             servoSwitch = findViewById(R.id.servo_switch);
@@ -68,14 +86,22 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Setup refresh handler for auto-refresh
+        // Initialize handlers
         refreshHandler = new Handler(Looper.getMainLooper());
+        servoHandler = new Handler(Looper.getMainLooper());
         refreshRunnable = new Runnable() {
             @Override
             public void run() {
                 fetchLatestSensorData();
                 refreshHandler.postDelayed(this, AUTO_REFRESH_INTERVAL);
                 Log.d(TAG, "Auto-refresh triggered");
+            }
+        };
+        servoOffRunnable = () -> {
+            if (servoRef != null && isServoAutoRunning) {
+                servoRef.child("servo_on").setValue(false);
+                isServoAutoRunning = false;
+                Log.d(TAG, "Servo turned off after 10 seconds");
             }
         };
         refreshHandler.postDelayed(refreshRunnable, AUTO_REFRESH_INTERVAL);
@@ -88,62 +114,26 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // Real-time sensor data listener
-        sensorRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                try {
-                    if (snapshot.exists()) {
-                        Log.d(TAG, "Firebase snapshot received: " + snapshot.getValue().toString());
-                        DataSnapshot latest = null;
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            latest = child;
-                        }
-                        if (latest != null) {
-                            updateDashboard(latest);
-                        } else {
-                            Log.w(TAG, "No valid sensor data entries found");
-                            if (alerts != null) alerts.setText("No valid sensor data");
-                        }
-                    } else {
-                        Log.w(TAG, "No sensor data available in snapshot");
-                        if (alerts != null) alerts.setText("No sensor data available");
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error processing Firebase data: " + e.getMessage(), e);
-                    if (alerts != null) alerts.setText("Error updating sensor data");
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Firebase listener cancelled: " + error.getMessage());
-                if (alerts != null) alerts.setText("Firebase error: " + error.getMessage());
-            }
-        });
-
         // Map button
         if (mapButton != null) {
             mapButton.setOnClickListener(v -> {
                 try {
                     String gpsText = gps != null ? gps.getText().toString() : "";
                     Log.d(TAG, "Map button clicked, GPS text: " + gpsText);
-                    if (!gpsText.equals("Lat: 0.0, Lon: 0.0") && !gpsText.isEmpty() && !gpsText.contains("No GPS lock")) {
-                        String[] coords = gpsText.replace("Lat: ", "").split(",");
+                    double lat = DEFAULT_LAT;
+                    double lon = DEFAULT_LON;
+                    if (!gpsText.contains("No GPS lock")) {
+                        String[] coords = gpsText.replace("Lat: ", "").split(", Lon: ");
                         if (coords.length == 2) {
-                            String uri = "geo:" + coords[0].trim() + "," + coords[1].trim() + "?q=" + coords[0].trim() + "," + coords[1].trim();
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-                            intent.setPackage("com.google.android.apps.maps");
-                            startActivity(intent);
-                            Log.d(TAG, "Opening Google Maps with URI: " + uri);
-                        } else {
-                            Log.w(TAG, "Invalid GPS coordinates format");
-                            if (alerts != null) alerts.setText("Invalid GPS coordinates");
+                            lat = Double.parseDouble(coords[0]);
+                            lon = Double.parseDouble(coords[1]);
                         }
-                    } else {
-                        Log.w(TAG, "No valid GPS data for map");
-                        if (alerts != null) alerts.setText("No GPS data available");
                     }
+                    String uri = "geo:" + lat + "," + lon + "?q=" + lat + "," + lon;
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+                    intent.setPackage("com.google.android.apps.maps");
+                    startActivity(intent);
+                    Log.d(TAG, "Opening Google Maps with URI: " + uri);
                 } catch (Exception e) {
                     Log.e(TAG, "Error opening Google Maps: " + e.getMessage(), e);
                     if (alerts != null) alerts.setText("Error opening Maps");
@@ -203,6 +193,40 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Real-time sensor data listener
+        sensorRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                try {
+                    if (snapshot.exists()) {
+                        Log.d(TAG, "Firebase snapshot received: " + snapshot.getValue().toString());
+                        DataSnapshot latest = null;
+                        for (DataSnapshot child : snapshot.getChildren()) {
+                            latest = child;
+                        }
+                        if (latest != null) {
+                            updateDashboard(latest);
+                        } else {
+                            Log.w(TAG, "No valid sensor data entries found");
+                            if (alerts != null) alerts.setText("No valid sensor data");
+                        }
+                    } else {
+                        Log.w(TAG, "No sensor data available in snapshot");
+                        if (alerts != null) alerts.setText("No sensor data available");
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error processing Firebase data: " + e.getMessage(), e);
+                    if (alerts != null) alerts.setText("Error updating sensor data");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e(TAG, "Firebase listener cancelled: " + error.getMessage());
+                if (alerts != null) alerts.setText("Firebase error: " + error.getMessage());
+            }
+        });
+
         // Initial data fetch
         fetchLatestSensorData();
     }
@@ -212,8 +236,11 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         if (refreshHandler != null && refreshRunnable != null) {
             refreshHandler.removeCallbacks(refreshRunnable);
-            Log.d(TAG, "Auto-refresh stopped");
         }
+        if (servoHandler != null && servoOffRunnable != null) {
+            servoHandler.removeCallbacks(servoOffRunnable);
+        }
+        Log.d(TAG, "Handlers stopped");
     }
 
     private void fetchLatestSensorData() {
@@ -230,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Manual refresh snapshot: " + snapshot.getValue().toString());
                         for (DataSnapshot child : snapshot.getChildren()) {
                             updateDashboard(child);
-                            break; // Process only the latest entry
+                            break;
                         }
                     } else {
                         Log.w(TAG, "No sensor data available on refresh");
@@ -253,15 +280,20 @@ public class MainActivity extends AppCompatActivity {
     private void updateDashboard(DataSnapshot snapshot) {
         Log.d(TAG, "Updating dashboard with snapshot: " + snapshot.getValue().toString());
 
-        // Water levels
+        // Water levels and blockage
         try {
             Long w1 = snapshot.child("data/water_levels/0").getValue(Long.class);
             Long w2 = snapshot.child("data/water_levels/1").getValue(Long.class);
             Long w3 = snapshot.child("data/water_levels/2").getValue(Long.class);
             Log.d(TAG, "Water levels: w1=" + w1 + ", w2=" + w2 + ", w3=" + w3);
-            if (chamber1 != null) chamber1.setText("Chamber 1: " + (w1 != null && w1 == 1 ? "Full" : "Empty"));
-            if (chamber2 != null) chamber2.setText("Chamber 2: " + (w2 != null && w2 == 1 ? "Full" : "Empty"));
-            if (chamber3 != null) chamber3.setText("Chamber 3: " + (w3 != null && w3 == 1 ? "Full" : "Empty"));
+
+            // Update chambers
+            if (chamber1Progress != null) chamber1Progress.setProgress(w1 != null && w1 == 1 ? 100 : 0);
+            if (chamber2Progress != null) chamber2Progress.setProgress(w2 != null && w2 == 1 ? 100 : 0);
+            if (chamber3Progress != null) chamber3Progress.setProgress(w3 != null && w3 == 1 ? 100 : 0);
+            if (chamber1Status != null) chamber1Status.setText(w1 != null && w1 == 1 ? "Not OK" : "OK");
+            if (chamber2Status != null) chamber2Status.setText(w2 != null && w2 == 1 ? "Not OK" : "OK");
+            if (chamber3Status != null) chamber3Status.setText(w3 != null && w3 == 1 ? "Not OK" : "OK");
 
             // Blockage detection
             boolean blockage = (w1 != null && w2 != null && w3 != null) &&
@@ -271,42 +303,46 @@ public class MainActivity extends AppCompatActivity {
             Long blockedChamber = snapshot.child("data/blocked_chamber").getValue(Long.class);
             Log.d(TAG, "Blockage detected: " + blockage + ", blockedChamber: " + blockedChamber);
 
-            // Reset backgrounds
-            if (chamber1 != null) chamber1.setBackground(new ColorDrawable(getResources().getColor(R.color.blue)));
-            if (chamber2 != null) chamber2.setBackground(new ColorDrawable(getResources().getColor(R.color.blue)));
-            if (chamber3 != null) chamber3.setBackground(new ColorDrawable(getResources().getColor(R.color.blue)));
+            // Reset chamber colors
+            if (chamber1Card != null) chamber1Card.setCardBackgroundColor(getResources().getColor(R.color.blue));
+            if (chamber2Card != null) chamber2Card.setCardBackgroundColor(getResources().getColor(R.color.blue));
+            if (chamber3Card != null) chamber3Card.setCardBackgroundColor(getResources().getColor(R.color.blue));
 
+            // Set alerts and servo for blockage
+            String alertText = "No alerts";
+            boolean hasAlert = false;
             if (blockage && blockedChamber != null) {
-                if (blockedChamber == 1 && chamber1 != null) {
-                    chamber1.setBackground(new ColorDrawable(getResources().getColor(R.color.red)));
-                } else if (blockedChamber == 2 && chamber2 != null) {
-                    chamber2.setBackground(new ColorDrawable(getResources().getColor(R.color.red)));
-                } else if (blockedChamber == 3 && chamber3 != null) {
-                    chamber3.setBackground(new ColorDrawable(getResources().getColor(R.color.red)));
+                if (blockedChamber == 1 && chamber1Card != null) {
+                    chamber1Card.setCardBackgroundColor(getResources().getColor(R.color.red));
+                } else if (blockedChamber == 2 && chamber2Card != null) {
+                    chamber2Card.setCardBackgroundColor(getResources().getColor(R.color.red));
+                } else if (blockedChamber == 3 && chamber3Card != null) {
+                    chamber3Card.setCardBackgroundColor(getResources().getColor(R.color.red));
                 }
                 String type = snapshot.child("data/blockage_type").getValue(String.class);
-                if (alerts != null) {
-                    alerts.setText("Blockage Detected: " + (type != null ? type : "Unknown"));
-                    alerts.setBackground(new ColorDrawable(getResources().getColor(R.color.yellow)));
-                }
-                // Auto-enable servo
-                if (servoRef != null) {
+                alertText = "Blockage Detected: " + (type != null ? type : "Unknown");
+                hasAlert = true;
+                // Auto servo control
+                if (autoSwitch != null && autoSwitch.isChecked() && !isServoAutoRunning) {
                     servoRef.child("servo_on").setValue(true);
-                    servoRef.child("auto_mode").setValue(true);
+                    isServoAutoRunning = true;
+                    servoHandler.postDelayed(servoOffRunnable, SERVO_ON_DURATION);
+                    Log.d(TAG, "Servo turned on for 10 seconds due to blockage");
                 }
-                Log.d(TAG, "Blockage alert set: " + (type != null ? type : "Unknown"));
+                Log.d(TAG, "Blockage alert set: " + alertText);
             } else {
                 String alertType = snapshot.child("alert").getValue(String.class);
-                if (alerts != null) {
-                    if (alertType != null && !alertType.equals("None")) {
-                        alerts.setText(alertType);
-                        alerts.setBackground(new ColorDrawable(getResources().getColor(R.color.yellow)));
-                    } else {
-                        alerts.setText("No alerts");
-                        alerts.setBackground(new ColorDrawable(getResources().getColor(R.color.transparent)));
-                    }
+                if (alertType != null && !alertType.equals("None")) {
+                    alertText = alertType;
+                    hasAlert = true;
                 }
-                Log.d(TAG, "Alert set: " + (alertType != null ? alertType : "None"));
+                Log.d(TAG, "Alert set: " + alertText);
+            }
+
+            // Update alerts
+            if (alerts != null) {
+                alerts.setText(alertText);
+                alerts.setBackground(new ColorDrawable(getResources().getColor(hasAlert ? R.color.red : R.color.transparent)));
             }
         } catch (Exception e) {
             Log.e(TAG, "Error processing water levels or blockage: " + e.getMessage(), e);
@@ -328,6 +364,17 @@ public class MainActivity extends AppCompatActivity {
             if (temp != null) temp.setText("Temperature: " + (tempVal != null ? String.format("%.1f", tempVal) : "0.0") + " °C");
             if (ir != null) ir.setText("IR: " + (irVal != null && irVal == 1 ? "Detected" : "Not Detected"));
             if (flame != null) flame.setText("Flame: " + (flameVal != null && flameVal == 1 ? "Detected" : "Not Detected"));
+
+            // Proximity alert
+            boolean proximity = (dist1 != null && dist1 < 5.0) || (dist2 != null && dist2 < 5.0);
+            if (proximityAlert != null) {
+                proximityAlert.setText(proximity ? "Proximity Alert: Object < 5 cm" : "Proximity: Safe");
+                if (proximity && !alerts.getText().toString().contains("Proximity")) {
+                    String currentAlert = alerts.getText().toString();
+                    alerts.setText(currentAlert.equals("No alerts") ? "Proximity Alert" : currentAlert + "; Proximity Alert");
+                    alerts.setBackground(new ColorDrawable(getResources().getColor(R.color.red)));
+                }
+            }
         } catch (Exception e) {
             Log.e(TAG, "Error processing sensor data: " + e.getMessage(), e);
         }
@@ -336,8 +383,12 @@ public class MainActivity extends AppCompatActivity {
         try {
             String gpsCoords = snapshot.child("gps").getValue(String.class);
             if (gps != null) {
-                gps.setText(gpsCoords != null && !gpsCoords.equals("No GPS lock") ? "Lat: " + gpsCoords : "Lat: 0.0, Lon: 0.0");
-                Log.d(TAG, "GPS set to: " + (gpsCoords != null ? gpsCoords : "No GPS lock"));
+                if (gpsCoords != null && !gpsCoords.equals("No GPS lock")) {
+                    gps.setText("Lat: " + gpsCoords);
+                } else {
+                    gps.setText(String.format("Lat: %.6f, Lon: %.6f", DEFAULT_LAT, DEFAULT_LON));
+                }
+                Log.d(TAG, "GPS set to: " + gps.getText());
             }
         } catch (Exception e) {
             Log.e(TAG, "Error processing GPS data: " + e.getMessage(), e);

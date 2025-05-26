@@ -1,188 +1,296 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_bg"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@drawable/gradient_bg">
 
-    <!-- Title -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textColor="@color/white"
-        android:textSize="26sp"
-        android:textStyle="bold"
-        android:layout_gravity="center"
-        android:layout_marginBottom="20dp"/>
-
-    <!-- Water Levels -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Water Levels"
-        android:textColor="@color/white"
-        android:textSize="20sp"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="16dp">
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- App Title -->
         <TextView
-            android:id="@+id/chamber1"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="60dp"
-            android:background="@color/blue"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="Chamber 1: Empty"
+            android:id="@+id/app_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textColor="@color/white"
+            android:textSize="28sp"
+            android:textStyle="bold|italic"
+            android:fontFamily="sans-serif-condensed"
+            android:shadowColor="@color/black"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            android:layout_gravity="center"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Chambers -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Drainage Chambers"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:layout_marginBottom="8dp"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+            <!-- Chamber 1 -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/chamber1_card"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="120dp"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/blue"
+                android:elevation="4dp"
+                android:radius="8dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+                    <TextView
+                        android:id="@+id/chamber1_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Chamber 1"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"/>
+                    <ProgressBar
+                        android:id="@+id/chamber1_progress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="20dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressTint="@color/white"/>
+                    <TextView
+                        android:id="@+id/chamber1_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OK"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            <!-- Chamber 2 -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/chamber2_card"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="120dp"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/blue"
+                android:elevation="4dp"
+                android:radius="8dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+                    <TextView
+                        android:id="@+id/chamber2_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Chamber 2"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"/>
+                    <ProgressBar
+                        android:id="@+id/chamber2_progress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="20dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressTint="@color/white"/>
+                    <TextView
+                        android:id="@+id/chamber2_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OK"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+            <!-- Chamber 3 -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/chamber3_card"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="120dp"
+                android:layout_margin="4dp"
+                android:backgroundTint="@color/blue"
+                android:elevation="4dp"
+                android:radius="8dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="8dp"
+                    android:gravity="center">
+                    <TextView
+                        android:id="@+id/chamber3_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Chamber 3"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"/>
+                    <ProgressBar
+                        android:id="@+id/chamber3_progress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="20dp"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressTint="@color/white"/>
+                    <TextView
+                        android:id="@+id/chamber3_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OK"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+
+        <!-- Sensor Data -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sensor Data"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:layout_marginTop="16dp"/>
+        <TextView
+            android:id="@+id/sonar1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sonar 1: 0.0 cm"
             android:textColor="@color/white"
             android:textSize="16sp"/>
         <TextView
-            android:id="@+id/chamber2"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="60dp"
-            android:background="@color/blue"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="Chamber 2: Empty"
+            android:id="@+id/sonar2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sonar 2: 0.0 cm"
             android:textColor="@color/white"
             android:textSize="16sp"/>
         <TextView
-            android:id="@+id/chamber3"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="60dp"
-            android:background="@color/blue"
-            android:gravity="center"
-            android:padding="8dp"
-            android:text="Chamber 3: Empty"
+            android:id="@+id/gas_mq8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MQ8 Gas: 0.00 V"
             android:textColor="@color/white"
             android:textSize="16sp"/>
+        <TextView
+            android:id="@+id/temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Temperature: 0.0 °C"
+            android:textColor="@color/white"
+            android:textSize="16sp"/>
+        <TextView
+            android:id="@+id/ir"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="IR: Not Detected"
+            android:textColor="@color/white"
+            android:textSize="16sp"/>
+        <TextView
+            android:id="@+id/flame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Flame: Not Detected"
+            android:textColor="@color/white"
+            android:textSize="16sp"/>
+        <TextView
+            android:id="@+id/proximity_alert"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Proximity: Safe"
+            android:textColor="@color/white"
+            android:textSize="16sp"/>
+
+        <!-- GPS -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GPS Coordinates"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:layout_marginTop="16dp"/>
+        <TextView
+            android:id="@+id/gps"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lat: 0.0, Lon: 0.0"
+            android:textColor="@color/white"
+            android:textSize="16sp"/>
+        <Button
+            android:id="@+id/map_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/green"
+            android:text="Open in Google Maps"
+            android:textColor="@color/white"
+            android:layout_marginTop="8dp"/>
+        <Button
+            android:id="@+id/refresh_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/green"
+            android:text="Refresh Data"
+            android:textColor="@color/white"
+            android:layout_marginTop="8dp"/>
+
+        <!-- Servo Controls -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Servo Control"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:layout_marginTop="16dp"/>
+        <Switch
+            android:id="@+id/servo_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Servo On/Off"
+            android:textColor="@color/white"
+            android:textSize="16sp"/>
+        <Switch
+            android:id="@+id/auto_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Auto Mode"
+            android:textColor="@color/white"
+            android:textSize="16sp"/>
+
+        <!-- Alerts -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alerts"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:layout_marginTop="16dp"/>
+        <TextView
+            android:id="@+id/alerts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No alerts"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:background="@color/transparent"
+            android:padding="8dp"/>
     </LinearLayout>
-
-    <!-- Sensor Data -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sensor Data"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:layout_marginTop="16dp"/>
-    <TextView
-        android:id="@+id/sonar1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sonar 1: 0.0 cm"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-    <TextView
-        android:id="@+id/sonar2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sonar 2: 0.0 cm"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-    <TextView
-        android:id="@+id/gas_mq8"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="MQ8 Gas: 0.00 V"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-    <TextView
-        android:id="@+id/temp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Temperature: 0.0 °C"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-    <TextView
-        android:id="@+id/ir"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="IR: Not Detected"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-    <TextView
-        android:id="@+id/flame"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Flame: Not Detected"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-
-    <!-- GPS -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="GPS Coordinates"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:layout_marginTop="16dp"/>
-    <TextView
-        android:id="@+id/gps"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Lat: 0.0, Lon: 0.0"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-    <Button
-        android:id="@+id/map_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/green"
-        android:text="Open in Google Maps"
-        android:textColor="@color/white"
-        android:layout_marginTop="8dp"/>
-    <Button
-        android:id="@+id/refresh_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/green"
-        android:text="Refresh Data"
-        android:textColor="@color/white"
-        android:layout_marginTop="8dp"/>
-
-    <!-- Servo Controls -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Servo Control"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:layout_marginTop="16dp"/>
-    <Switch
-        android:id="@+id/servo_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Servo On/Off"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-    <Switch
-        android:id="@+id/auto_switch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Auto Mode"
-        android:textColor="@color/white"
-        android:textSize="16sp"/>
-
-    <!-- Alerts -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Alerts"
-        android:textColor="@color/white"
-        android:textSize="20sp"
-        android:layout_marginTop="16dp"/>
-    <TextView
-        android:id="@+id/alerts"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="No alerts"
-        android:textColor="@color/yellow"
-        android:textSize="16sp"/>
-</LinearLayout>
+</ScrollView>
