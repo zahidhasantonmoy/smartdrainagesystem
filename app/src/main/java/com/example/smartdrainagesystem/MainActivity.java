@@ -1,397 +1,330 @@
-package com.example.smartdrainagesystem;
+package com.example.smartdrainagesystem; // Replace with your package name
 
 import android.content.Intent;
-import android.graphics.drawable.ColorDrawable;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
+
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
-    private static final long AUTO_REFRESH_INTERVAL = 2000; // 2 seconds
-    private static final long SERVO_ON_DURATION = 10 * 1000; // 10 seconds
-    private static final long SERVO_OFF_DURATION = 10 * 60 * 1000; // 10 minutes
-    private static final double DEFAULT_LAT = 23.811855;
-    private static final double DEFAULT_LON = 90.357140;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
-    private CardView chamber1Card, chamber2Card, chamber3Card;
-    private ProgressBar chamber1Progress, chamber2Progress, chamber3Progress;
-    private TextView chamber1Status, chamber2Status, chamber3Status;
-    private TextView sonar1, sonar2, gasMq8, temp, ir, flame, gps, proximityAlert, alerts;
-    private Button mapButton, refreshButton;
-    private Switch servoSwitch, autoSwitch;
-    private DatabaseReference sensorRef, servoRef;
-    private Handler refreshHandler, servoHandler;
-    private Runnable refreshRunnable, servoOffRunnable;
-    private boolean isServoAutoRunning = false;
+public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
+    private static final String FIREBASE_URL = "https://smartdrainagesystem-75097-default-rtdb.firebaseio.com/"; // Your Firebase URL
+
+    private TextView tvWaterLevel1, tvWaterLevel2, tvWaterLevel3;
+    private LinearLayout chamber1Layout, chamber2Layout, chamber3Layout;
+    private TextView tvAlertType, tvBlockageDetails, tvSonar1, tvSonar2, tvMQ8, tvTemperature;
+    private TextView tvIRSensor, tvFlameSensor, tvGPSCoordinates, tvTimestamp;
+    private Button btnOpenMap, btnRefresh;
+    private SwitchMaterial switchManualServo, switchAutoMode;
+    private ProgressBar progressBar;
+
+    private DatabaseReference sensorDataRef;
+    private DatabaseReference servoControlRef;
+    private ValueEventListener sensorDataListener;
+    private ValueEventListener servoControlListener;
+
+    private String currentGpsCoordinates = "0,0";
+    private Handler uiHandler = new Handler(Looper.getMainLooper());
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize UI elements
-        try {
-            chamber1Card = findViewById(R.id.chamber1_card);
-            chamber2Card = findViewById(R.id.chamber2_card);
-            chamber3Card = findViewById(R.id.chamber3_card);
-            chamber1Progress = findViewById(R.id.chamber1_progress);
-            chamber2Progress = findViewById(R.id.chamber2_progress);
-            chamber3Progress = findViewById(R.id.chamber3_progress);
-            chamber1Status = findViewById(R.id.chamber1_status);
-            chamber2Status = findViewById(R.id.chamber2_status);
-            chamber3Status = findViewById(R.id.chamber3_status);
-            sonar1 = findViewById(R.id.sonar1);
-            sonar2 = findViewById(R.id.sonar2);
-            gasMq8 = findViewById(R.id.gas_mq8);
-            temp = findViewById(R.id.temp);
-            ir = findViewById(R.id.ir);
-            flame = findViewById(R.id.flame);
-            gps = findViewById(R.id.gps);
-            proximityAlert = findViewById(R.id.proximity_alert);
-            mapButton = findViewById(R.id.map_button);
-            refreshButton = findViewById(R.id.refresh_button);
-            servoSwitch = findViewById(R.id.servo_switch);
-            autoSwitch = findViewById(R.id.auto_switch);
-            alerts = findViewById(R.id.alerts);
-            Log.d(TAG, "UI elements initialized successfully");
-        } catch (Exception e) {
-            Log.e(TAG, "Error initializing UI: " + e.getMessage(), e);
-            if (alerts != null) alerts.setText("UI initialization failed");
-            return;
-        }
+        initializeUI();
 
-        // Initialize Firebase
-        try {
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            sensorRef = database.getReference("sensor_data");
-            servoRef = database.getReference("servo_control");
-            Log.d(TAG, "Firebase initialized with sensorRef: " + sensorRef.toString());
-        } catch (Exception e) {
-            Log.e(TAG, "Error initializing Firebase: " + e.getMessage(), e);
-            if (alerts != null) alerts.setText("Firebase initialization failed");
-            return;
-        }
+        FirebaseDatabase database = FirebaseDatabase.getInstance(FIREBASE_URL);
+        sensorDataRef = database.getReference("sensor_data");
+        servoControlRef = database.getReference("servo_control");
 
-        // Initialize handlers
-        refreshHandler = new Handler(Looper.getMainLooper());
-        servoHandler = new Handler(Looper.getMainLooper());
-        refreshRunnable = new Runnable() {
-            @Override
-            public void run() {
-                fetchLatestSensorData();
-                refreshHandler.postDelayed(this, AUTO_REFRESH_INTERVAL);
-                Log.d(TAG, "Auto-refresh triggered");
-            }
-        };
-        servoOffRunnable = () -> {
-            if (servoRef != null && isServoAutoRunning) {
-                servoRef.child("servo_on").setValue(false);
-                isServoAutoRunning = false;
-                Log.d(TAG, "Servo turned off after 10 seconds");
-            }
-        };
-        refreshHandler.postDelayed(refreshRunnable, AUTO_REFRESH_INTERVAL);
+        setupListeners();
 
-        // Refresh button
-        if (refreshButton != null) {
-            refreshButton.setOnClickListener(v -> {
-                fetchLatestSensorData();
-                Log.d(TAG, "Refresh button clicked");
-            });
-        }
+        btnOpenMap.setOnClickListener(v -> openMap());
+        btnRefresh.setOnClickListener(v -> refreshData());
 
-        // Map button
-        if (mapButton != null) {
-            mapButton.setOnClickListener(v -> {
-                try {
-                    String gpsText = gps != null ? gps.getText().toString() : "";
-                    Log.d(TAG, "Map button clicked, GPS text: " + gpsText);
-                    double lat = DEFAULT_LAT;
-                    double lon = DEFAULT_LON;
-                    if (!gpsText.contains("No GPS lock")) {
-                        String[] coords = gpsText.replace("Lat: ", "").split(", Lon: ");
-                        if (coords.length == 2) {
-                            lat = Double.parseDouble(coords[0]);
-                            lon = Double.parseDouble(coords[1]);
-                        }
-                    }
-                    String uri = "geo:" + lat + "," + lon + "?q=" + lat + "," + lon;
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-                    intent.setPackage("com.google.android.apps.maps");
-                    startActivity(intent);
-                    Log.d(TAG, "Opening Google Maps with URI: " + uri);
-                } catch (Exception e) {
-                    Log.e(TAG, "Error opening Google Maps: " + e.getMessage(), e);
-                    if (alerts != null) alerts.setText("Error opening Maps");
-                }
-            });
-        }
-
-        // Servo controls
-        if (servoSwitch != null) {
-            servoSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                try {
-                    servoRef.child("servo_on").setValue(isChecked);
-                    Log.d(TAG, "Servo switch set to: " + isChecked);
-                } catch (Exception e) {
-                    Log.e(TAG, "Error setting servo state: " + e.getMessage(), e);
-                    if (alerts != null) alerts.setText("Error updating servo");
-                }
-            });
-        }
-
-        if (autoSwitch != null) {
-            autoSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                try {
-                    servoRef.child("auto_mode").setValue(isChecked);
-                    Log.d(TAG, "Auto mode switch set to: " + isChecked);
-                } catch (Exception e) {
-                    Log.e(TAG, "Error setting auto mode: " + e.getMessage(), e);
-                    if (alerts != null) alerts.setText("Error updating auto mode");
-                }
-            });
-        }
-
-        // Listen for servo control changes
-        servoRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                try {
-                    Boolean servoOn = snapshot.child("servo_on").getValue(Boolean.class);
-                    Boolean autoMode = snapshot.child("auto_mode").getValue(Boolean.class);
-                    Log.d(TAG, "Servo control update: servo_on=" + servoOn + ", auto_mode=" + autoMode);
-                    if (servoSwitch != null && servoOn != null) {
-                        servoSwitch.setChecked(servoOn);
-                    }
-                    if (autoSwitch != null && autoMode != null) {
-                        autoSwitch.setChecked(autoMode);
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error updating servo controls: " + e.getMessage(), e);
-                    if (alerts != null) alerts.setText("Error updating servo controls");
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Servo control listener cancelled: " + error.getMessage());
-                if (alerts != null) alerts.setText("Servo control error");
+        switchManualServo.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) { // Only react to user interaction
+                updateServoControl("servo_on", isChecked);
             }
         });
 
-        // Real-time sensor data listener
-        sensorRef.addValueEventListener(new ValueEventListener() {
+        switchAutoMode.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isPressed()) { // Only react to user interaction
+                updateServoControl("auto_mode", isChecked);
+            }
+        });
+    }
+
+    private void initializeUI() {
+        chamber1Layout = findViewById(R.id.chamber1Layout);
+        chamber2Layout = findViewById(R.id.chamber2Layout);
+        chamber3Layout = findViewById(R.id.chamber3Layout);
+        tvWaterLevel1 = findViewById(R.id.tvWaterLevel1);
+        tvWaterLevel2 = findViewById(R.id.tvWaterLevel2);
+        tvWaterLevel3 = findViewById(R.id.tvWaterLevel3);
+
+        tvAlertType = findViewById(R.id.tvAlertType);
+        tvBlockageDetails = findViewById(R.id.tvBlockageDetails);
+        tvSonar1 = findViewById(R.id.tvSonar1);
+        tvSonar2 = findViewById(R.id.tvSonar2);
+        tvMQ8 = findViewById(R.id.tvMQ8);
+        tvTemperature = findViewById(R.id.tvTemperature);
+        tvIRSensor = findViewById(R.id.tvIRSensor);
+        tvFlameSensor = findViewById(R.id.tvFlameSensor);
+        tvGPSCoordinates = findViewById(R.id.tvGPSCoordinates);
+        tvTimestamp = findViewById(R.id.tvTimestamp);
+
+        btnOpenMap = findViewById(R.id.btnOpenMap);
+        btnRefresh = findViewById(R.id.btnRefresh);
+        switchManualServo = findViewById(R.id.switchManualServo);
+        switchAutoMode = findViewById(R.id.switchAutoMode);
+        progressBar = findViewById(R.id.progressBar);
+    }
+
+    private void setupListeners() {
+        progressBar.setVisibility(View.VISIBLE);
+
+        sensorDataListener = new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                try {
-                    if (snapshot.exists()) {
-                        Log.d(TAG, "Firebase snapshot received: " + snapshot.getValue().toString());
-                        DataSnapshot latest = null;
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            latest = child;
-                        }
-                        if (latest != null) {
-                            updateDashboard(latest);
-                        } else {
-                            Log.w(TAG, "No valid sensor data entries found");
-                            if (alerts != null) alerts.setText("No valid sensor data");
-                        }
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                progressBar.setVisibility(View.GONE);
+                SensorFirebaseData sensorData = dataSnapshot.getValue(SensorFirebaseData.class);
+                if (sensorData != null) {
+                    updateSensorUI(sensorData);
+                } else {
+                    Toast.makeText(MainActivity.this, "No sensor data found", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                progressBar.setVisibility(View.GONE);
+                Log.w(TAG, "loadSensorData:onCancelled", databaseError.toException());
+                Toast.makeText(MainActivity.this, "Failed to load sensor data.", Toast.LENGTH_SHORT).show();
+            }
+        };
+
+        servoControlListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ServoControl control = dataSnapshot.getValue(ServoControl.class);
+                if (control != null) {
+                    // Update switches without triggering their change listeners
+                    switchManualServo.setChecked(control.servo_on);
+                    switchAutoMode.setChecked(control.auto_mode);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.w(TAG, "loadServoControl:onCancelled", databaseError.toException());
+                Toast.makeText(MainActivity.this, "Failed to load servo control.", Toast.LENGTH_SHORT).show();
+            }
+        };
+        attachFirebaseListeners();
+    }
+
+    private void attachFirebaseListeners() {
+        if (sensorDataRef != null && sensorDataListener != null) {
+            sensorDataRef.addValueEventListener(sensorDataListener);
+        }
+        if (servoControlRef != null && servoControlListener != null) {
+            servoControlRef.addValueEventListener(servoControlListener);
+        }
+    }
+
+    private void detachFirebaseListeners() {
+        if (sensorDataRef != null && sensorDataListener != null) {
+            sensorDataRef.removeEventListener(sensorDataListener);
+        }
+        if (servoControlRef != null && servoControlListener != null) {
+            servoControlRef.removeEventListener(servoControlListener);
+        }
+    }
+
+
+    private void updateSensorUI(SensorFirebaseData sensorData) {
+        if (sensorData.alert != null) {
+            tvAlertType.setText(String.format("Alert: %s", sensorData.alert));
+            if ("Blockage".equals(sensorData.alert) || "Gas".equals(sensorData.alert) || "Fire".equals(sensorData.alert)) {
+                tvAlertType.setTextColor(Color.RED);
+            } else {
+                tvAlertType.setTextColor(Color.BLACK); // Or your default color
+            }
+        }
+
+        if (sensorData.gps != null) {
+            currentGpsCoordinates = sensorData.gps;
+            tvGPSCoordinates.setText(String.format("GPS: %s", currentGpsCoordinates));
+        }
+
+        if (sensorData.data != null) {
+            SensorDetails details = sensorData.data;
+            if (details.blockage_type != null) {
+                String blockageText = String.format("Blockage Type: %s", details.blockage_type);
+                if (details.blocked_chamber != null) {
+                    blockageText += String.format(" (Chamber %d)", details.blocked_chamber);
+                }
+                tvBlockageDetails.setText(blockageText);
+            } else {
+                tvBlockageDetails.setText("Blockage: None");
+            }
+
+            tvSonar1.setText(String.format(Locale.US,"Sonar 1: %.1f cm", details.distance1 != null ? details.distance1 : 0.0));
+            tvSonar2.setText(String.format(Locale.US,"Sonar 2: %.1f cm", details.distance2 != null ? details.distance2 : 0.0));
+            tvMQ8.setText(String.format(Locale.US,"Gas (MQ8): %.2f V", details.mq8 != null ? details.mq8 : 0.0));
+            tvTemperature.setText(String.format(Locale.US,"Temp: %.1f °C", details.temp != null ? details.temp : 0.0));
+            tvIRSensor.setText(String.format("IR Sensor: %s", details.ir != null && details.ir == 0 ? "Object Detected" : "Clear"));
+            tvFlameSensor.setText(String.format("Flame Sensor: %s", details.flame != null && details.flame == 0 ? "Flame Detected" : "No Flame"));
+
+            // Update Chamber Visuals
+            updateChamberVisuals(details.water_levels, "Blockage".equals(sensorData.alert) ? details.blocked_chamber : null);
+        }
+
+        if (sensorData.timestamp > 0) {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss", Locale.getDefault());
+            tvTimestamp.setText(String.format("Last Update: %s", sdf.format(new Date(sensorData.timestamp * 1000L))));
+        }
+    }
+
+    private void updateChamberVisuals(List<Integer> waterLevels, Integer blockedChamber) {
+        LinearLayout[] chamberLayouts = {chamber1Layout, chamber2Layout, chamber3Layout};
+        TextView[] waterLevelTextViews = {tvWaterLevel1, tvWaterLevel2, tvWaterLevel3};
+        int defaultColor = Color.parseColor("#E0E0E0"); // Light Grey
+        int waterColor = Color.parseColor("#ADD8E6");   // Light Blue
+        int blockedColor = Color.RED;
+
+        if (waterLevels != null && waterLevels.size() == 3) {
+            for (int i = 0; i < 3; i++) {
+                boolean hasWater = waterLevels.get(i) == 1;
+                waterLevelTextViews[i].setText(hasWater ? "Water Present" : "No Water");
+
+                if (blockedChamber != null && (i + 1) == blockedChamber) {
+                    chamberLayouts[i].setBackgroundColor(blockedColor);
+                } else {
+                    chamberLayouts[i].setBackgroundColor(hasWater ? waterColor : defaultColor);
+                }
+            }
+        } else {
+            // Reset if data is incomplete
+            for (int i = 0; i < 3; i++) {
+                chamberLayouts[i].setBackgroundColor(defaultColor);
+                waterLevelTextViews[i].setText("Status");
+            }
+        }
+    }
+
+
+    private void updateServoControl(String key, boolean value) {
+        if (servoControlRef != null) {
+            servoControlRef.child(key).setValue(value)
+                    .addOnSuccessListener(aVoid -> Log.d(TAG, key + " updated to " + value))
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(MainActivity.this, "Failed to update " + key, Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Failed to update " + key, e);
+                        // Revert switch state on failure
+                        if (key.equals("servo_on")) switchManualServo.setChecked(!value);
+                        if (key.equals("auto_mode")) switchAutoMode.setChecked(!value);
+                    });
+        }
+    }
+
+    private void openMap() {
+        if (currentGpsCoordinates != null && !currentGpsCoordinates.isEmpty() && !currentGpsCoordinates.equals("0,0")) {
+            try {
+                Uri gmmIntentUri = Uri.parse("geo:" + currentGpsCoordinates + "?q=" + currentGpsCoordinates + "(Drainage System Location)");
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                if (mapIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(mapIntent);
+                } else {
+                    // Fallback to web browser if Google Maps app is not installed
+                    Intent webIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?q=" + currentGpsCoordinates));
+                    startActivity(webIntent);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error opening map", e);
+                Toast.makeText(this, "Could not open map application.", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(this, "GPS coordinates not available.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void refreshData() {
+        // Re-fetch data using a one-time get() call.
+        // This is an alternative to relying solely on addValueEventListener if a manual pull is desired.
+        progressBar.setVisibility(View.VISIBLE);
+        if (sensorDataRef != null) {
+            sensorDataRef.get().addOnCompleteListener(task -> {
+                progressBar.setVisibility(View.GONE);
+                if (task.isSuccessful()) {
+                    DataSnapshot dataSnapshot = task.getResult();
+                    SensorFirebaseData sensorData = dataSnapshot.getValue(SensorFirebaseData.class);
+                    if (sensorData != null) {
+                        updateSensorUI(sensorData);
+                        Toast.makeText(MainActivity.this, "Data refreshed", Toast.LENGTH_SHORT).show();
                     } else {
-                        Log.w(TAG, "No sensor data available in snapshot");
-                        if (alerts != null) alerts.setText("No sensor data available");
+                        Toast.makeText(MainActivity.this, "No sensor data found on refresh", Toast.LENGTH_SHORT).show();
                     }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error processing Firebase data: " + e.getMessage(), e);
-                    if (alerts != null) alerts.setText("Error updating sensor data");
+                } else {
+                    Log.e(TAG, "Error getting sensor data on refresh.", task.getException());
+                    Toast.makeText(MainActivity.this, "Failed to refresh sensor data.", Toast.LENGTH_SHORT).show();
                 }
-            }
+            });
+        }
+        if (servoControlRef != null) {
+            servoControlRef.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    DataSnapshot dataSnapshot = task.getResult();
+                    ServoControl control = dataSnapshot.getValue(ServoControl.class);
+                    if (control != null) {
+                        switchManualServo.setChecked(control.servo_on);
+                        switchAutoMode.setChecked(control.auto_mode);
+                    }
+                } else {
+                    Log.e(TAG, "Error getting servo control data on refresh.", task.getException());
+                }
+            });
+        }
+    }
 
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Firebase listener cancelled: " + error.getMessage());
-                if (alerts != null) alerts.setText("Firebase error: " + error.getMessage());
-            }
-        });
 
-        // Initial data fetch
-        fetchLatestSensorData();
+    @Override
+    protected void onStart() {
+        super.onStart();
+        attachFirebaseListeners();
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (refreshHandler != null && refreshRunnable != null) {
-            refreshHandler.removeCallbacks(refreshRunnable);
-        }
-        if (servoHandler != null && servoOffRunnable != null) {
-            servoHandler.removeCallbacks(servoOffRunnable);
-        }
-        Log.d(TAG, "Handlers stopped");
-    }
-
-    private void fetchLatestSensorData() {
-        if (sensorRef == null) {
-            Log.e(TAG, "sensorRef is null, cannot fetch data");
-            if (alerts != null) alerts.setText("Firebase not initialized");
-            return;
-        }
-        sensorRef.orderByChild("timestamp").limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                try {
-                    if (snapshot.exists()) {
-                        Log.d(TAG, "Manual refresh snapshot: " + snapshot.getValue().toString());
-                        for (DataSnapshot child : snapshot.getChildren()) {
-                            updateDashboard(child);
-                            break;
-                        }
-                    } else {
-                        Log.w(TAG, "No sensor data available on refresh");
-                        if (alerts != null) alerts.setText("No sensor data available");
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "Error during manual refresh: " + e.getMessage(), e);
-                    if (alerts != null) alerts.setText("Error refreshing data");
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Log.e(TAG, "Manual refresh cancelled: " + error.getMessage());
-                if (alerts != null) alerts.setText("Refresh error: " + error.getMessage());
-            }
-        });
-    }
-
-    private void updateDashboard(DataSnapshot snapshot) {
-        Log.d(TAG, "Updating dashboard with snapshot: " + snapshot.getValue().toString());
-
-        // Water levels and blockage
-        try {
-            Long w1 = snapshot.child("data/water_levels/0").getValue(Long.class);
-            Long w2 = snapshot.child("data/water_levels/1").getValue(Long.class);
-            Long w3 = snapshot.child("data/water_levels/2").getValue(Long.class);
-            Log.d(TAG, "Water levels: w1=" + w1 + ", w2=" + w2 + ", w3=" + w3);
-
-            // Update chambers
-            if (chamber1Progress != null) chamber1Progress.setProgress(w1 != null && w1 == 1 ? 100 : 0);
-            if (chamber2Progress != null) chamber2Progress.setProgress(w2 != null && w2 == 1 ? 100 : 0);
-            if (chamber3Progress != null) chamber3Progress.setProgress(w3 != null && w3 == 1 ? 100 : 0);
-            if (chamber1Status != null) chamber1Status.setText(w1 != null && w1 == 1 ? "Not OK" : "OK");
-            if (chamber2Status != null) chamber2Status.setText(w2 != null && w2 == 1 ? "Not OK" : "OK");
-            if (chamber3Status != null) chamber3Status.setText(w3 != null && w3 == 1 ? "Not OK" : "OK");
-
-            // Blockage detection
-            boolean blockage = (w1 != null && w2 != null && w3 != null) &&
-                    ((w1 == 1 && w2 == 1 && w3 == 0) ||
-                            (w1 == 1 && w3 == 1 && w2 == 0) ||
-                            (w2 == 1 && w3 == 1 && w1 == 0));
-            Long blockedChamber = snapshot.child("data/blocked_chamber").getValue(Long.class);
-            Log.d(TAG, "Blockage detected: " + blockage + ", blockedChamber: " + blockedChamber);
-
-            // Reset chamber colors
-            if (chamber1Card != null) chamber1Card.setCardBackgroundColor(getResources().getColor(R.color.blue));
-            if (chamber2Card != null) chamber2Card.setCardBackgroundColor(getResources().getColor(R.color.blue));
-            if (chamber3Card != null) chamber3Card.setCardBackgroundColor(getResources().getColor(R.color.blue));
-
-            // Set alerts and servo for blockage
-            String alertText = "No alerts";
-            boolean hasAlert = false;
-            if (blockage && blockedChamber != null) {
-                if (blockedChamber == 1 && chamber1Card != null) {
-                    chamber1Card.setCardBackgroundColor(getResources().getColor(R.color.red));
-                } else if (blockedChamber == 2 && chamber2Card != null) {
-                    chamber2Card.setCardBackgroundColor(getResources().getColor(R.color.red));
-                } else if (blockedChamber == 3 && chamber3Card != null) {
-                    chamber3Card.setCardBackgroundColor(getResources().getColor(R.color.red));
-                }
-                String type = snapshot.child("data/blockage_type").getValue(String.class);
-                alertText = "Blockage Detected: " + (type != null ? type : "Unknown");
-                hasAlert = true;
-                // Auto servo control
-                if (autoSwitch != null && autoSwitch.isChecked() && !isServoAutoRunning) {
-                    servoRef.child("servo_on").setValue(true);
-                    isServoAutoRunning = true;
-                    servoHandler.postDelayed(servoOffRunnable, SERVO_ON_DURATION);
-                    Log.d(TAG, "Servo turned on for 10 seconds due to blockage");
-                }
-                Log.d(TAG, "Blockage alert set: " + alertText);
-            } else {
-                String alertType = snapshot.child("alert").getValue(String.class);
-                if (alertType != null && !alertType.equals("None")) {
-                    alertText = alertType;
-                    hasAlert = true;
-                }
-                Log.d(TAG, "Alert set: " + alertText);
-            }
-
-            // Update alerts
-            if (alerts != null) {
-                alerts.setText(alertText);
-                alerts.setBackground(new ColorDrawable(getResources().getColor(hasAlert ? R.color.red : R.color.transparent)));
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error processing water levels or blockage: " + e.getMessage(), e);
-        }
-
-        // Sensor data
-        try {
-            Double dist1 = snapshot.child("data/distance1").getValue(Double.class);
-            Double dist2 = snapshot.child("data/distance2").getValue(Double.class);
-            Double mq8 = snapshot.child("data/mq8").getValue(Double.class);
-            Double tempVal = snapshot.child("data/temp").getValue(Double.class);
-            Long irVal = snapshot.child("data/ir").getValue(Long.class);
-            Long flameVal = snapshot.child("data/flame").getValue(Long.class);
-            Log.d(TAG, "Sensor data: dist1=" + dist1 + ", dist2=" + dist2 + ", mq8=" + mq8 + ", temp=" + tempVal + ", ir=" + irVal + ", flame=" + flameVal);
-
-            if (sonar1 != null) sonar1.setText("Sonar 1: " + (dist1 != null ? String.format("%.1f", dist1) : "0.0") + " cm");
-            if (sonar2 != null) sonar2.setText("Sonar 2: " + (dist2 != null ? String.format("%.1f", dist2) : "0.0") + " cm");
-            if (gasMq8 != null) gasMq8.setText("MQ8 Gas: " + (mq8 != null ? String.format("%.2f", mq8) : "0.00") + " V");
-            if (temp != null) temp.setText("Temperature: " + (tempVal != null ? String.format("%.1f", tempVal) : "0.0") + " °C");
-            if (ir != null) ir.setText("IR: " + (irVal != null && irVal == 1 ? "Detected" : "Not Detected"));
-            if (flame != null) flame.setText("Flame: " + (flameVal != null && flameVal == 1 ? "Detected" : "Not Detected"));
-
-            // Proximity alert
-            boolean proximity = (dist1 != null && dist1 < 5.0) || (dist2 != null && dist2 < 5.0);
-            if (proximityAlert != null) {
-                proximityAlert.setText(proximity ? "Proximity Alert: Object < 5 cm" : "Proximity: Safe");
-                if (proximity && !alerts.getText().toString().contains("Proximity")) {
-                    String currentAlert = alerts.getText().toString();
-                    alerts.setText(currentAlert.equals("No alerts") ? "Proximity Alert" : currentAlert + "; Proximity Alert");
-                    alerts.setBackground(new ColorDrawable(getResources().getColor(R.color.red)));
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error processing sensor data: " + e.getMessage(), e);
-        }
-
-        // GPS
-        try {
-            String gpsCoords = snapshot.child("gps").getValue(String.class);
-            if (gps != null) {
-                if (gpsCoords != null && !gpsCoords.equals("No GPS lock")) {
-                    gps.setText("Lat: " + gpsCoords);
-                } else {
-                    gps.setText(String.format("Lat: %.6f, Lon: %.6f", DEFAULT_LAT, DEFAULT_LON));
-                }
-                Log.d(TAG, "GPS set to: " + gps.getText());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error processing GPS data: " + e.getMessage(), e);
-        }
+    protected void onStop() {
+        super.onStop();
+        detachFirebaseListeners();
     }
 }
