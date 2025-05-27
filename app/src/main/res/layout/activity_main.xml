@@ -1,155 +1,316 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimaryDark"
     tools:context=".MainActivity">
 
-    <LinearLayout
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:background="@color/colorPrimaryDark"
+        app:elevation="0dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Drainage Chambers"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize">
+
+            <ImageView
+                android:id="@+id/ivAppIcon"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_title_logo" /> <!-- Replace with your logo -->
+
+            <TextView
+                android:id="@+id/tvAppTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Flowguard EcoControl"
+                style="@style/FuturisticTitleText" />
+        </androidx.appcompat.widget.Toolbar>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="8dp"
-            android:baselineAligned="false">
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Alert Status Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/colorPrimary"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+                    <ImageView
+                        android:id="@+id/ivAlertIcon"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/ic_alert"
+                        app:tint="@color/colorAccent"
+                        android:layout_marginEnd="12dp"/>
+                    <TextView
+                        android:id="@+id/tvAlertType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Status: All Clear"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/textColorPrimary"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Chambers -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Drainage Chambers"
+                android:textColor="@color/colorAccent"
+                android:textSize="20sp"
+                android:fontFamily="@font/orbitron"
+                android:layout_marginBottom="8dp"/>
 
             <LinearLayout
-                android:id="@+id/chamber1Layout"
-                android:layout_width="0dp"
-                android:layout_height="80dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="#E0E0E0"
-                android:layout_marginEnd="4dp">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Chamber 1"/>
-                <TextView
-                    android:id="@+id/tvWaterLevel1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Status"/>
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:layout_marginBottom="16dp">
+
+                <!-- Chamber 1 -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/colorPrimary"
+                    android:layout_marginEnd="8dp">
+                    <RelativeLayout
+                        android:id="@+id/chamber1Layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/chamber_background">
+                        <View
+                            android:id="@+id/waterIndicator1"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_alignParentBottom="true"
+                            android:background="@drawable/chamber_water_background"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chamber 1"
+                            android:layout_alignParentTop="true"
+                            android:layout_centerHorizontal="true"
+                            android:padding="8dp"
+                            android:textColor="@color/textColorPrimary"/>
+                        <TextView
+                            android:id="@+id/tvWaterLevel1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Empty"
+                            android:layout_centerInParent="true"
+                            android:textColor="@color/white"
+                            android:textStyle="bold"/>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Chamber 2 (similar structure) -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/colorPrimary"
+                    android:layout_marginStart="4dp" android:layout_marginEnd="4dp">
+                    <RelativeLayout
+                        android:id="@+id/chamber2Layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/chamber_background">
+                        <View
+                            android:id="@+id/waterIndicator2"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_alignParentBottom="true"
+                            android:background="@drawable/chamber_water_background"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chamber 2"
+                            android:layout_alignParentTop="true"
+                            android:layout_centerHorizontal="true"
+                            android:padding="8dp"
+                            android:textColor="@color/textColorPrimary"/>
+                        <TextView
+                            android:id="@+id/tvWaterLevel2"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Empty"
+                            android:layout_centerInParent="true"
+                            android:textColor="@color/white"
+                            android:textStyle="bold"/>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Chamber 3 (similar structure) -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="0dp"
+                    android:layout_height="120dp"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/colorPrimary"
+                    android:layout_marginStart="8dp">
+                    <RelativeLayout
+                        android:id="@+id/chamber3Layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/chamber_background">
+                        <View
+                            android:id="@+id/waterIndicator3"
+                            android:layout_width="match_parent"
+                            android:layout_height="0dp"
+                            android:layout_alignParentBottom="true"
+                            android:background="@drawable/chamber_water_background"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Chamber 3"
+                            android:layout_alignParentTop="true"
+                            android:layout_centerHorizontal="true"
+                            android:padding="8dp"
+                            android:textColor="@color/textColorPrimary"/>
+                        <TextView
+                            android:id="@+id/tvWaterLevel3"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Empty"
+                            android:layout_centerInParent="true"
+                            android:textColor="@color/white"
+                            android:textStyle="bold"/>
+                    </RelativeLayout>
+                </androidx.cardview.widget.CardView>
             </LinearLayout>
 
+            <!-- Sensor Details Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/colorPrimary"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView android:id="@+id/tvBlockageDetails" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/SensorValueText" android:text="Blockage: -" android:drawableStart="@drawable/ic_obstacle" android:drawablePadding="8dp" app:drawableTint="@color/colorAccent"/>
+                    <TextView android:id="@+id/tvMQ8" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/SensorValueText" android:text="Methane: Not Present" android:drawableStart="@drawable/ic_gas_can" android:drawablePadding="8dp" app:drawableTint="@color/colorAccent"/>
+                    <TextView android:id="@+id/tvFlameSensor" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/SensorValueText" android:text="Flame: No Flame" android:drawableStart="@drawable/ic_whatshot" android:drawablePadding="8dp" app:drawableTint="@color/colorAccent"/>
+                    <TextView android:id="@+id/tvIRSensor" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/SensorValueText" android:text="Obstacle (IR): Clear" android:drawableStart="@drawable/ic_obstacle" android:drawablePadding="8dp" app:drawableTint="@color/colorAccent"/>
+                    <TextView android:id="@+id/tvSonar1" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/SensorValueText" android:text="Sonar 1: - cm" android:drawableStart="@drawable/ic_sonar" android:drawablePadding="8dp" app:drawableTint="@color/colorAccent"/>
+                    <TextView android:id="@+id/tvSonar2" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/SensorValueText" android:text="Sonar 2: - cm" android:drawableStart="@drawable/ic_sonar" android:drawablePadding="8dp" app:drawableTint="@color/colorAccent"/>
+                    <TextView android:id="@+id/tvTemperature" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/SensorValueText" android:text="Temp: - °C" android:drawableStart="@drawable/ic_thermostat" android:drawablePadding="8dp" app:drawableTint="@color/colorAccent"/>
+                    <TextView android:id="@+id/tvGPSCoordinates" android:layout_width="wrap_content" android:layout_height="wrap_content" style="@style/SensorValueText" android:text="GPS: -" android:drawableStart="@drawable/ic_location" android:drawablePadding="8dp" app:drawableTint="@color/colorAccent"/>
+                    <TextView android:id="@+id/tvTimestamp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Last Update: -" android:textSize="12sp" android:textColor="@color/textColorSecondary" android:layout_marginTop="8dp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Action Buttons -->
             <LinearLayout
-                android:id="@+id/chamber2Layout"
-                android:layout_width="0dp"
-                android:layout_height="80dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="#E0E0E0"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp">
-                <TextView
-                    android:layout_width="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnOpenMap"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Chamber 2"/>
-                <TextView
-                    android:id="@+id/tvWaterLevel2"
-                    android:layout_width="wrap_content"
+                    android:layout_weight="1"
+                    android:text="View Location"
+                    style="@style/ModernButton"
+                    app:icon="@drawable/ic_location"
+                    android:layout_marginEnd="8dp"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRefresh"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Status"/>
+                    android:layout_weight="1"
+                    android:text="Refresh"
+                    style="@style/ModernButton"
+                    app:icon="@drawable/ic_refresh"
+                    android:layout_marginStart="8dp"/>
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/chamber3Layout"
-                android:layout_width="0dp"
-                android:layout_height="80dp"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:background="#E0E0E0"
-                android:layout_marginStart="4dp">
-                <TextView
-                    android:layout_width="wrap_content"
+            <!-- Servo Controls Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/colorPrimary"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Chamber 3"/>
-                <TextView
-                    android:id="@+id/tvWaterLevel3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Status"/>
-            </LinearLayout>
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Plastic Cutter Control"
+                        android:textColor="@color/colorAccent"
+                        android:textSize="18sp"
+                        android:fontFamily="@font/orbitron"
+                        android:layout_marginBottom="12dp"/>
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchManualServo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Manual Cutter Activation"
+                        android:textColor="@color/textColorPrimary"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:textSize="16sp"/>
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchAutoMode"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Automatic Cutter Mode"
+                        android:textColor="@color/textColorPrimary"
+                        android:paddingTop="8dp"
+                        android:paddingBottom="8dp"
+                        android:textSize="16sp"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:visibility="gone"
+                android:layout_marginTop="16dp"
+                android:indeterminateTint="@color/colorAccent"/>
         </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sensor Data"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"/>
-
-        <TextView android:id="@+id/tvAlertType" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Alert: None" android:textSize="16sp" android:textStyle="bold" android:layout_marginTop="8dp"/>
-        <TextView android:id="@+id/tvBlockageDetails" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Blockage: -" android:layout_marginTop="4dp"/>
-        <TextView android:id="@+id/tvSonar1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sonar 1: - cm" android:layout_marginTop="4dp"/>
-        <TextView android:id="@+id/tvSonar2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sonar 2: - cm" android:layout_marginTop="4dp"/>
-        <TextView android:id="@+id/tvMQ8" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Gas (MQ8): - V" android:layout_marginTop="4dp"/>
-        <TextView android:id="@+id/tvTemperature" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Temp: - °C" android:layout_marginTop="4dp"/>
-        <TextView android:id="@+id/tvIRSensor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="IR Sensor: -" android:layout_marginTop="4dp"/>
-        <TextView android:id="@+id/tvFlameSensor" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flame Sensor: -" android:layout_marginTop="4dp"/>
-        <TextView android:id="@+id/tvGPSCoordinates" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GPS: -" android:layout_marginTop="4dp"/>
-        <TextView android:id="@+id/tvTimestamp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Last Update: -" android:layout_marginTop="4dp" android:textSize="12sp"/>
-
-        <Button
-            android:id="@+id/btnOpenMap"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Open Map"
-            android:layout_marginTop="16dp"/>
-
-        <Button
-            android:id="@+id/btnRefresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Refresh Data"
-            android:layout_marginTop="8dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Servo Control"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"/>
-
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchManualServo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Manual Servo ON/OFF"
-            android:layout_marginTop="8dp"/>
-
-        <com.google.android.material.switchmaterial.SwitchMaterial
-            android:id="@+id/switchAutoMode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Automatic Mode"
-            android:layout_marginTop="8dp"/>
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:visibility="gone"
-            android:layout_marginTop="16dp"/>
-
-    </LinearLayout>
-</ScrollView>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="blue">#0288D1</color>
-    <color name="green">#4CAF50</color>
-    <color name="red">#F44336</color>
-    <color name="yellow">#FFEB3B</color>
+    <color name="colorPrimaryDark">#1A232F</color> <!-- Dark background -->
+    <color name="colorPrimary">#29384D</color>   <!-- Slightly lighter card/element bg -->
+    <color name="colorAccent">#00BCD4</color>   <!-- Bright Teal/Cyan for accents -->
+    <color name="textColorPrimary">#E0E0E0</color> <!-- Light text for dark bg -->
+    <color name="textColorSecondary">#B0B0B0</color><!-- Slightly dimmer text -->
+    <color name="red_alert">#FF5252</color>
+    <color name="green_ok">#4CAF50</color>
+    <color name="water_blue_light">#64B5F6</color>
+    <color name="water_blue_dark">#2196F3</color>
+    <color name="chamber_empty_bg">#424242</color> <!-- Darker grey for empty chamber -->
+    <color name="chamber_blocked_bg">#D32F2F</color> <!-- Strong red for blocked -->
+    <color name="button_gradient_start">#00BCD4</color>
+    <color name="button_gradient_end">#0097A7</color>
     <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
-    <color name="transparent">#00000000</color>
 </resources>
