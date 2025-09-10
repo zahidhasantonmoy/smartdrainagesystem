@@ -1,0 +1,26 @@
+Excited to share my latest IoT project - Flowguard EcoControl: A Smart Drainage System! 🌊💡
+
+This Android application is part of an innovative IoT solution designed to prevent urban flooding and environmental hazards through real-time monitoring and control of drainage systems. 
+
+Key features I developed:
+• Real-time monitoring of water levels across 3 drainage chambers with visual indicators
+• Detection of blockages using sonar sensors and obstacle detection systems
+• Methane gas monitoring for safety hazards prevention
+• Flame detection capabilities for fire hazard monitoring
+• GPS location tracking with integrated map navigation
+• Remote control of a plastic cutter mechanism via Firebase
+• Live data synchronization using Firebase Realtime Database
+• Modern, responsive UI with animated water level visualization
+
+Technologies used:
+• Android Development (Java)
+• Firebase Realtime Database
+• Material Design Components
+• Sensor integration (Sonar, MQ-8 Gas sensor, IR sensors, Flame sensors)
+• Google Maps API integration
+
+This project demonstrates my proficiency in mobile app development, IoT integration, real-time data processing, and creating user-centric solutions for environmental challenges. The system provides city authorities with proactive tools to maintain drainage infrastructure and prevent flooding disasters.
+
+GitHub: https://github.com/zahidhasantonmoy/smartdrainagesystem
+
+#IoT #AndroidDevelopment #Firebase #SmartCities #EnvironmentalTech #Java #MobileAppDevelopment #Innovation #Sustainability #SmartDrainage #RealTimeSystems

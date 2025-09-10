@@ -1,0 +1,30 @@
+🌍 TACKLING URBAN FLOODING WITH TECHNOLOGY 🌊 | Introducing Flowguard EcoControl - My IoT Solution Making Cities Safer!
+
+I'm thrilled to showcase my capstone project that merges environmental consciousness with cutting-edge technology - a Smart Drainage System that could revolutionize urban infrastructure management!
+
+🏙️ THE CHALLENGE:
+Urban flooding affects millions worldwide each year, causing billions in damages and disrupting lives. Traditional drainage systems lack real-time monitoring, leading to preventable disasters.
+
+💡 MY SOLUTION:
+Flowguard EcoControl - an end-to-end IoT ecosystem combining hardware sensors with a sleek Android dashboard that transforms passive drainage systems into proactive guardians of our cities.
+
+🚀 KEY INNOVATIONS I ENGINEERED:
+• Real-time monitoring of 3 drainage chambers with animated water level visualization
+• Intelligent blockage detection using dual sonar sensors + IR obstacle detection
+• Safety-first design with methane gas & flame monitoring capabilities
+• GPS-enabled location tracking with one-tap map navigation
+• Remote plastic cutter control via Firebase for autonomous blockage removal
+• Live data synchronization ensuring 24/7 system awareness
+• Futuristic UI/UX with Material Design principles
+
+🔧 TECH STACK:
+Java | Android | Firebase Realtime Database | Sensor Integration | Google Maps API
+
+🌱 IMPACT & VALUE:
+This system empowers city authorities with predictive maintenance capabilities, potentially reducing flood-related damages by up to 60% while enhancing public safety through hazard detection.
+
+The project demonstrates my ability to architect full-stack IoT solutions that address real environmental challenges while delivering intuitive user experiences.
+
+🔗 GitHub: https://github.com/zahidhasantonmoy/smartdrainagesystem
+
+#IoT #SmartCities #EnvironmentalTech #AndroidDevelopment #Firebase #Java #Innovation #Sustainability #UrbanPlanning #FloodPrevention #IoTSolutions #CapstoneProject #SoftwareEngineering #TechForGood
